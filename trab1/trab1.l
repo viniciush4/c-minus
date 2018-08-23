@@ -8,16 +8,26 @@
 #include <ctype.h>
 %}
 
+%option yylineno
+
 letra  [a-zA-Z]
 digito [0-9]
-identificador ({letra}[{letra}{digito}]*)
+identificador ({letra}+)|({letra}{digito}*)
 numero  ({digito}+)
-abreComentario "/*"
-fechaComentario "*/"
-abreComentarioLinha "//"
+abreComentario "{"
+fechaComentario "}"
 
 %%
-{abreComentarioLinha}[^\n]("\n")	{}
+
+{abreComentario}[^}]*{fechaComentario} {
+	int i;
+	for(i=0; i<yyleng; i++){
+		if(yytext[i] == '\n'){
+			yylineno++;
+		}
+	}
+}
+
 "else"			{ printf("%d: %s -> ELSE\n", yylineno, yytext); }
 "if"				{ printf("%d: %s -> IF\n", yylineno, yytext); }
 "input"			{ printf("%d: %s -> INPUT\n", yylineno, yytext); }
@@ -53,31 +63,8 @@ abreComentarioLinha "//"
 {numero}			{ printf("%d: %s -> NUM\n", yylineno, yytext); }
 {identificador}	{ printf("%d: %s -> ID\n", yylineno, yytext); }
 	
-\n				{ yylineno++; }
-[ \t]			{}
-
-
-
-
-
-{abreComentario}[^{fechaComentario}]*{fechaComentario} {
-	int i;
-	for(i=0; i<yyleng; i++){
-		if(yytext[i] == '\n'){
-			yylineno++;
-		}
-	}
-}
-	/*
-"{"			{ 
-				char str[1]; 
-				str[0] = 'z'; 
-				while(str[0] != '}') { 
-					scanf("%s", str); 
-					printf("%s\n", str); 
-				} 
-			}
-*/
+"\n"				{ yylineno++; }
+[ \t]			{ }
 .				{ printf("%d: %s -> UNKNOWN\n", yylineno, yytext); }
 %%
 
