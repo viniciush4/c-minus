@@ -9,24 +9,21 @@
 %}
 
 %option yylineno
-
+%x comentarioMultilinha
 letra  [a-zA-Z]
 digito [0-9]
 identificador ({letra}+)|({letra}{digito}*)
 numero  ({digito}+)
-abreComentario "{"
-fechaComentario "}"
+comentarioSimples "//".*
+string "\"".*"\""
 
 %%
 
-{abreComentario}[^}]*{fechaComentario} {
-	int i;
-	for(i=0; i<yyleng; i++){
-		if(yytext[i] == '\n'){
-			yylineno++;
-		}
-	}
-}
+"/*"           			{ BEGIN(comentarioMultilinha); }
+<comentarioMultilinha>"*/"	{ BEGIN(INITIAL); }
+<comentarioMultilinha>.|\n	{ }
+
+{comentarioSimples}			{ }
 
 "else"			{ printf("%d: %s -> ELSE\n", yylineno, yytext); }
 "if"				{ printf("%d: %s -> IF\n", yylineno, yytext); }
@@ -59,12 +56,11 @@ fechaComentario "}"
 "{"				{ printf("%d: %s -> LBRACE\n", yylineno, yytext); }	
 "}"				{ printf("%d: %s -> RBRACE\n", yylineno, yytext); }	
 
-
+{string}			{ printf("%d: %s -> STRING\n", yylineno, yytext); }
 {numero}			{ printf("%d: %s -> NUM\n", yylineno, yytext); }
 {identificador}	{ printf("%d: %s -> ID\n", yylineno, yytext); }
-	
-"\n"				{ yylineno++; }
-[ \t]			{ }
+
+[ \t\n]			{ }
 .				{ printf("%d: %s -> UNKNOWN\n", yylineno, yytext); }
 %%
 
